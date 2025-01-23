@@ -1,8 +1,10 @@
 package com.example.chitchatapp.repository
 
+
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import com.example.chitchatapp.data.USER_NODE
-import com.example.chitchatapp.others.handleException
+import com.example.chitchatapp.data.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +18,7 @@ class SignInRepository @Inject constructor(
 
     // State to control the progress bar visibility
     var showProgressBar = MutableStateFlow(false)
+
 
     // Sign-up method with validation and Firebase authentication
     fun signUp(
@@ -122,7 +125,4 @@ class SignInRepository @Inject constructor(
             showProgressBar.value = false
         }
     }
-
-    // Placeholder for user profile creation or update logic
-
 }

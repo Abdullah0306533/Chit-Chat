@@ -10,19 +10,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.chitchatapp.ui.theme.ChitChatAppTheme
-import com.example.chitchatapp.viewmodel.SignInViewmodel
+import com.example.chitchatapp.viewmodel.ChitChatViewmodel
 import dagger.hilt.android.AndroidEntryPoint
 import com.example.chitchatapp.screens.ChatListScreen
 import com.example.chitchatapp.screens.SignInScreen
 import com.example.chitchatapp.screens.SignUpScreen
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.navigation.compose.composable
+import androidx.compose.animation.* // For the animation transitions
+import com.example.chitchatapp.screens.ProfileScreen
+import com.example.chitchatapp.screens.StatusListScreen
+import com.google.accompanist.navigation.animation.AnimatedNavHost
 
-// Sealed class for managing screen destinations and routes
 sealed class ScreenDestinations(val route: String) {
     object SignUp : ScreenDestinations(route = "signUp")
     object SignIn : ScreenDestinations(route = "signIn")
@@ -63,36 +63,75 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Composable function to handle navigation logic
+    @OptIn(ExperimentalAnimationApi::class)
     @Composable
     fun ChatAppNavigation() {
-        // Create a NavController to handle navigation between screens
         val navController = rememberNavController()
+        val vm = hiltViewModel<ChitChatViewmodel>()
 
-        // Obtain the SignInViewModel to manage sign-in state
-        val vm = hiltViewModel<SignInViewmodel>()
-
-        // Determine the start destination based on the sign-in state
+        // Determine the start destination based on sign-in state
         val startDestination = if (vm.signIn.value) {
-            ScreenDestinations.ChatList.route // User is signed in
+            ScreenDestinations.ChatList.route
         } else {
-            ScreenDestinations.SignIn.route // User is not signed in
+            ScreenDestinations.SignIn.route
         }
 
-        // Set up the navigation host with composable routes
-        NavHost(navController = navController, startDestination = startDestination) {
-            composable(ScreenDestinations.SignUp.route) {
-                // Navigate to the SignUp screen
+        // Set up AnimatedNavHost
+        AnimatedNavHost(
+            navController = navController,
+            startDestination = startDestination
+        ) {
+            // SignUp screen with transition
+            composable(
+                route = ScreenDestinations.SignUp.route,
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) {
                 SignUpScreen(navController, vm)
             }
-            composable(ScreenDestinations.SignIn.route) {
-                // Navigate to the SignIn screen
+
+            // SignIn screen with transition
+            composable(
+                route = ScreenDestinations.SignIn.route,
+                enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+            ) {
                 SignInScreen(navController, vm)
             }
-            composable(ScreenDestinations.ChatList.route) {
-                // Navigate to the ChatList screen
+
+            // ChatList screen with transition
+            composable(
+                route = ScreenDestinations.ChatList.route,
+                enterTransition = { slideInVertically(initialOffsetY = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutVertically(targetOffsetY = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInVertically(initialOffsetY = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutVertically(targetOffsetY = { 1000 }) + fadeOut() }
+            ) {
                 ChatListScreen(navController, vm)
             }
+            composable(
+                route = ScreenDestinations.StatusList.route,
+                enterTransition = { slideInVertically(initialOffsetY = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutVertically(targetOffsetY = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInVertically(initialOffsetY = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutVertically(targetOffsetY = { 1000 }) + fadeOut() }
+            ) {
+                StatusListScreen(navController, vm)
+            }
+            composable(
+                route = ScreenDestinations.Profile.route,
+                enterTransition = { slideInVertically(initialOffsetY = { 1000 }) + fadeIn() },
+                exitTransition = { slideOutVertically(targetOffsetY = { -1000 }) + fadeOut() },
+                popEnterTransition = { slideInVertically(initialOffsetY = { -1000 }) + fadeIn() },
+                popExitTransition = { slideOutVertically(targetOffsetY = { 1000 }) + fadeOut() }
+            ) {
+                ProfileScreen(navController, vm)
+            }
+
         }
     }
 }

@@ -78,6 +78,9 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     //Animations
     implementation (libs.lottie.compose)
+    implementation ("com.google.accompanist:accompanist-navigation-animation:0.32.0") // Replace with the latest stable version
+
+
 
 
 }

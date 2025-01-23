@@ -1,6 +1,19 @@
 package com.example.chitchatapp.others
 
+import android.content.Context
 import android.util.Log
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -25,7 +41,16 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.chitchatapp.R
 import com.example.chitchatapp.activities.ScreenDestinations
-import com.example.chitchatapp.viewmodel.SignInViewmodel
+import com.example.chitchatapp.screens.ChatListScreen
+import com.example.chitchatapp.screens.ProfileScreen
+import com.example.chitchatapp.screens.StatusListScreen
+import com.example.chitchatapp.viewmodel.ChitChatViewmodel
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+
+
+
+
 
 // Displays a progress bar with Lottie animation
 @Composable
@@ -59,12 +84,12 @@ fun handleException(exception: Exception? = null, customMessage: String? = "") {
     exception?.printStackTrace()
     val errorMsg = exception?.localizedMessage ?: ""
     val message = if (errorMsg.isEmpty()) errorMsg else customMessage
-    Log.d("", "Exception occurred in Chit Chat App $customMessage", exception)
+    Log.d("TAG", "Exception occurred in Chit Chat App $customMessage", exception)
 }
 
 // Checks sign-in status and navigates accordingly
 @Composable
-fun CheckSignIn(navController: NavController, vm: SignInViewmodel) {
+fun CheckSignIn(navController: NavController, vm: ChitChatViewmodel) {
     val alreadySignedIn = remember { mutableStateOf(false) }
     val signedIn = vm.signIn.value
 
@@ -77,3 +102,4 @@ fun CheckSignIn(navController: NavController, vm: SignInViewmodel) {
         }
     }
 }
+

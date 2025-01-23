@@ -26,7 +26,10 @@ class HiltModule {
     fun getFireBaseFireStore():FirebaseFirestore=Firebase.firestore
     @Provides
     @Singleton
-    fun getUpdateDataRepository():UpdateDataRepository=UpdateDataRepository()
+    fun getUpdateDataRepository(authentication: FirebaseAuth,
+                                db: FirebaseFirestore):UpdateDataRepository{
+        return UpdateDataRepository(authentication,db)
+    }
     @Provides
     @Singleton
     fun getSignInRepository(authentication: FirebaseAuth,
