@@ -1,13 +1,13 @@
 package com.example.chitchatapp.repository
 
-
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import com.example.chitchatapp.data.USER_NODE
-import com.example.chitchatapp.data.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class SignInRepository @Inject constructor(
@@ -19,9 +19,8 @@ class SignInRepository @Inject constructor(
     // State to control the progress bar visibility
     var showProgressBar = MutableStateFlow(false)
 
-
     // Sign-up method with validation and Firebase authentication
-    fun signUp(
+    suspend fun signUp(
         name: String,
         email: String,
         password: String,
@@ -32,96 +31,75 @@ class SignInRepository @Inject constructor(
 
         // Input validation for fields
         when {
-            name.isEmpty() -> {
-                onResult(false, "Name can't be empty")
-                showProgressBar.value = false
-                return
-            }
-            number.isEmpty() -> {
-                onResult(false, "Number can't be empty")
-                showProgressBar.value = false
-                return
-            }
-            email.isEmpty() -> {
-                onResult(false, "Email can't be empty")
-                showProgressBar.value = false
-                return
-            }
-            password.length < 6 -> {
-                onResult(false, "Password length must be at least 6 characters")
-                showProgressBar.value = false
-                return
-            }
+            name.isEmpty() -> return onResult(false, "Name can't be empty")
+            number.isEmpty() -> return onResult(false, "Number can't be empty")
+            email.isEmpty() -> return onResult(false, "Email can't be empty")
+            password.length < 6 -> return onResult(false, "Password length must be at least 6 characters")
         }
 
-        // Checking if the number already exists in the database
-        db.collection(USER_NODE).whereEqualTo("number", number).get()
-            .addOnSuccessListener { querySnapshot ->
-                if (!querySnapshot.isEmpty) {
-                    // Number already exists
-                    onResult(false, "Number already exists")
-                    showProgressBar.value = false
-                    return@addOnSuccessListener
-                }
+        try {
+            // Move database and authentication calls to background thread
+            val querySnapshot = withContext(Dispatchers.IO) {
+                db.collection(USER_NODE).whereEqualTo("number", number).get().await()
+            }
 
-                // Proceed with user creation if the number doesn't exist
-                authentication.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            // Create or update user profile after successful sign-up
-                            updateDataRepository.createOrUpdateProfile(name = name, number = number)
-                            onResult(true, null) // Success
-                        } else {
-                            onResult(false, "SignUp failed: ${task.exception?.message}")
-                        }
-                        showProgressBar.value = false
-                    }
-            }
-            .addOnFailureListener { exception ->
-                onResult(false, "Error checking number: ${exception.message}")
+            if (!querySnapshot.isEmpty) {
+                onResult(false, "Number already exists")
                 showProgressBar.value = false
+                return
             }
+
+            // Proceed with user creation if the number doesn't exist
+            val task = withContext(Dispatchers.IO) {
+                authentication.createUserWithEmailAndPassword(email, password).await()
+            }
+
+            if (task.user != null) {
+                // Create or update user profile after successful sign-up
+                updateDataRepository.createOrUpdateProfile(name = name, number = number)
+                onResult(true, null) // Success
+            } else {
+                onResult(false, "SignUp failed")
+            }
+        } catch (e: Exception) {
+            onResult(false, "Error: ${e.message}")
+        } finally {
+            showProgressBar.value = false
+        }
     }
-    fun signIn(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
-        // Show the progress bar when the sign-in process starts
+
+    // Sign-in method with validation and Firebase authentication
+    suspend fun signIn(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         showProgressBar.value = true
 
         // Check if the inputs are valid
         when {
-            email.isEmpty() -> {
-                // Invalid email
-                onResult(false, "Email can't be empty")
-                showProgressBar.value = false
-                return
-            }
-            password.length < 6 -> {
-                // Invalid password length
-                onResult(false, "Password length must be at least 6 characters")
-                showProgressBar.value = false
-                return
-            }
+            email.isEmpty() -> return onResult(false, "Email can't be empty")
+            password.length < 6 -> return onResult(false, "Password length must be at least 6 characters")
         }
 
-        // Firebase Authentication sign-in attempt
-        authentication.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-            // Ensure the task is completed on the main thread for UI updates
-            if (task.isSuccessful) {
+        try {
+            // Firebase Authentication sign-in attempt off the main thread
+            val task = withContext(Dispatchers.IO) {
+                authentication.signInWithEmailAndPassword(email, password).await()
+            }
+
+            if (task.user != null) {
                 // If sign-in is successful
-                val userId = authentication.currentUser?.uid
+                val userId = task.user?.uid
                 if (userId != null) {
                     // Proceed with fetching user data if the user ID is available
                     updateDataRepository.getUserData(userId)
-                    // Notify success
                     onResult(true, null)
                 } else {
-                    // If no user ID is found, inform the user about the issue
                     onResult(false, "User not found")
                 }
             } else {
-                // If sign-in failed, notify the user with an appropriate error message
-                onResult(false, "Error in logging you in: ${task.exception?.message}")
+                onResult(false, "Error in logging you in")
             }
-            // Hide the progress bar after the task is completed
+        } catch (e: Exception) {
+            onResult(false, "Error: ${e.message}")
+        } finally {
             showProgressBar.value = false
         }
     }

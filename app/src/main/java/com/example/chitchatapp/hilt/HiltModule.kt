@@ -1,5 +1,6 @@
 package com.example.chitchatapp.hilt
 
+import com.example.chitchatapp.repository.ChatRepository
 import com.example.chitchatapp.repository.SignInRepository
 import com.example.chitchatapp.repository.UpdateDataRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -35,6 +36,10 @@ class HiltModule {
     fun getSignInRepository(authentication: FirebaseAuth,
                             db: FirebaseFirestore,updateDataRepository: UpdateDataRepository):SignInRepository{
         return SignInRepository(authentication,db,updateDataRepository)
-
+    }
+    @Provides
+    @Singleton
+    fun getChatRepository(db: FirebaseFirestore,updateDataRepository: UpdateDataRepository):ChatRepository{
+        return ChatRepository(db,updateDataRepository)
     }
 }

@@ -19,6 +19,7 @@ import com.example.chitchatapp.screens.SignInScreen
 import com.example.chitchatapp.screens.SignUpScreen
 import androidx.navigation.compose.composable
 import androidx.compose.animation.* // For the animation transitions
+import androidx.compose.material3.Text
 import com.example.chitchatapp.screens.ProfileScreen
 import com.example.chitchatapp.screens.StatusListScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -56,6 +57,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+
                     // Set up navigation between screens
                     ChatAppNavigation()
                 }
@@ -69,6 +71,7 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         val vm = hiltViewModel<ChitChatViewmodel>()
 
+        vm.populateChats()
         // Determine the start destination based on sign-in state
         val startDestination = if (vm.signIn.value) {
             ScreenDestinations.ChatList.route
